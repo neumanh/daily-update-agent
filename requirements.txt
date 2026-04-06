@@ -1,5 +1,4 @@
 python-dotenv
-agents
 openmeteo-requests
 pandas
 requests-cache
