@@ -1,0 +1,1 @@
+python -u "c:\Users\user\Documents\Hadas\code\emailer\agent.py"

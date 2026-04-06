@@ -1,0 +1,11 @@
+python-dotenv
+agents
+openmeteo-requests
+pandas
+requests-cache
+retry_requests
+geopy
+requests
+openai
+numpy
+yfinance
