@@ -2,6 +2,7 @@ import asyncio
 from dotenv import load_dotenv
 from agents import Agent, Runner, function_tool
 
+from date_tools import is_tomorrow_working_day
 from finance_tools import get_ta125_change
 from weather_tools import get_weather_interval, when_will_it_rain_tomorrow
 from gpt_tools import get_empowering_message, get_dvar_torah
@@ -125,5 +126,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Check if tomorrow is a working day before running the agent
+    is_working, _ = is_tomorrow_working_day()
+    if is_working:
+        asyncio.run(main())
     print("Done.")
