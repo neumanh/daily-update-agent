@@ -15,6 +15,11 @@ load_dotenv()
 # --- Constants ---
 MODEL_NAME = "gpt-5-mini"
 SEFARIA_URL = "https://www.sefaria.org/api/calendars"
+ALIYAH_NAMES = {
+    "1": "Rishon",   "2": "Sheni",   "3": "Shlishi",
+    "4": "Revi'i",   "5": "Chamishi", "6": "Shishi",
+    "7": "Shvi'i",   "M": "Maftir",
+}
 
 # Initialize OpenAI client once (reuse across calls)
 _OPENAI_CLIENT: Optional[OpenAI] = None
@@ -143,9 +148,10 @@ def get_parasha_sefaria() -> Optional[str]:
     Fetch the weekly Parasha from Sefaria API.
 
     Returns:
-        Optional[str]:
-            Formatted Parasha name (English + Hebrew),
-            or None if not found or request fails.
+        Optional[str]: Ready-to-use string like:
+            - "Shmini (שמיני), part Rishon"  (weekday reading)
+            - "Shmini (שמיני)"               (Shabbat - full parasha)
+            - None if not found or request fails.
     """
     try:
         response = requests.get(SEFARIA_URL, timeout=10)
@@ -155,7 +161,14 @@ def get_parasha_sefaria() -> Optional[str]:
         for item in data.get("calendar_items", []):
             if item.get("title", {}).get("en") == "Parashat Hashavua":
                 pr_value = item.get("displayValue", {})
-                return f"{pr_value.get('en')} ({pr_value.get('he')})"
+                parasha = f"{pr_value.get('en')} ({pr_value.get('he')})"
+
+                order = str(item.get("order", ""))
+                parasha_part = ALIYAH_NAMES.get(order)
+
+                if parasha_part:
+                    return f"{parasha}, part {parasha_part}"
+                return parasha
 
     except requests.RequestException:
         return None
@@ -164,15 +177,4 @@ def get_parasha_sefaria() -> Optional[str]:
 
 
 if __name__ == "__main__":
-    # Simple manual test
-    test_address = "hadas.doron@gmail.com"
-
-    try:
-        dvar_torah = get_dvar_torah()
-        send_email(
-            address=test_address,
-            subject="מסר מחזק",
-            body=dvar_torah
-        )
-    except Exception as e:
-        print(f"Error: {e}")
+    print(get_parasha_sefaria())
