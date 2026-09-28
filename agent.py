@@ -1,4 +1,6 @@
+import json
 import asyncio
+from pathlib import Path
 from dotenv import load_dotenv
 from agents import Agent, Runner, function_tool
 
@@ -8,9 +10,54 @@ from weather_tools import get_weather_interval, when_will_it_rain_tomorrow
 from gpt_tools import get_empowering_message, get_dvar_torah
 import email_tools as eu
 
-
 # Load environment variables
 load_dotenv()
+
+
+TOPICS_FILE = Path("family_topics.json")
+
+
+def load_family_topics():
+    if not TOPICS_FILE.exists():
+        return {
+            "Hallel": [],
+            "Israel": [],
+            "Michael": [],
+            "Yehonatan": [],
+        }
+
+    with open(TOPICS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_family_topics(topics):
+    temp_file = TOPICS_FILE.with_suffix(".tmp")
+
+    with open(temp_file, "w", encoding="utf-8") as f:
+        json.dump(topics, f, ensure_ascii=False, indent=2)
+
+    temp_file.replace(TOPICS_FILE)
+
+
+@function_tool
+def record_family_topic(child: str, topic: str):
+    """
+    Record a topic that was sent to a child so it won't be reused
+    in future daily updates.
+    """
+    topics = load_family_topics()
+
+    if child not in topics:
+        topics[child] = []
+
+    topics[child].append(topic)
+
+    # Keep only the 20 most recent topics per child
+    topics[child] = topics[child][-20:]
+
+    save_family_topics(topics)
+
+    return f"Recorded topic for {child}: {topic}"
 
 
 # --- Tool registration ---
@@ -27,13 +74,13 @@ def build_tools():
         function_tool(when_will_it_rain_tomorrow),
         function_tool(get_empowering_message),
         function_tool(get_dvar_torah),
-
         # Email tools
         function_tool(eu.send_update_email_to_myself),
         function_tool(eu.send_update_email_to_hallel),
         function_tool(eu.send_update_email_to_michael),
         function_tool(eu.send_update_email_to_israel),
         function_tool(eu.send_update_email_to_yehonatan),
+        record_family_topic,
     ]
 
 
@@ -78,31 +125,46 @@ async def run_hadas_agent(agent: Agent):
     await Runner.run(agent, prompt)
 
 
-async def run_family_agent(agent: Agent):
+async def run_family_agent(*agent: Agent):
     """
     Send personalized uplifting messages to each child.
     """
+    recent_topics = load_family_topics()
+
     prompt = (
-        "Write a short, uplifting message to each child:\n"
-        "- Michael\n"
-        "- Yehonatan\n"
-        "- Israel\n"
-        "- Hallel\n\n"
+        "Write a short, interesting message to each child.\n"
         "Each message must be sent via the appropriate email tool.\n\n"
-        "Guidelines:\n"
-        "- Tailor content to their interests:\n"
-        "  * Hallel: cats, MikMak, jokes\n"
-        "  * Israel: animals and history of weapons\n"
-        "  * Michael: high level architecture, history, archaeology\n"
-        "  * Yehonatan: history, geography of Israel\n"
-        "- Include something suprising, interesting or educational.\n"
-        "- You may include a joke, Dvar Torah, or empowering message.\n"
+        "CONTENT RULES:\n"
+        "- Choose a specific, unusual fact or idea related to the child's interests.\n"
+        "- Avoid the most obvious or well-known facts about the topic.\n"
+        "- Never reuse a recent topic listed below.\n"
+        "- Treat closely related facts as the same topic.\n"
+        "- The children are teenagers: keep the tone intelligent, mature, interesting, and natural — not childish or cutesy.\n"
+        "- Include something genuinely surprising, thought-provoking, or little-known.\n"
+        "- Add a warm personal touch from The Cool Family Agent. Be witty when appropriate, but don't force jokes.\n\n"
+        
+        "INTERESTS — use these as a pool, not as fixed topics:\n"
+        "  * Hallel: cats, the MikMak game, farm animal facts\n"
+        "  * Israel: gun history, animals, botany\n"
+        "  * Michael: architecture, archaeology, ancient civilizations, history, Israeli law\n"
+        "  * Yehonatan: countries and flags, world geography, historical events, Jewish settlements in Judea and Samaria\n\n"
+       
+        "VARIETY:\n"
+        "- Choose different interest categories when possible.\n"
+        "- Do not always choose the first or most obvious interest listed.\n"
+        "- Prefer less commonly known angles and unexpected connections.\n\n"
+        f"RECENT TOPICS — do NOT reuse these:\n"
+        f"{json.dumps(recent_topics, ensure_ascii=False, indent=2)}\n\n"
+        "IMPORTANT WORKFLOW:\n"
+        "- For each child, first choose a topic that is not in their recent topics.\n"
+        "- Call record_family_topic with the child's name and the chosen topic.\n"
+        "- Then send the email using the appropriate email tool.\n"
         "- Do not return text directly.\n"
         "- Use tools when needed.\n"
         "- Hebrew only."
     )
 
-    await Runner.run(agent, prompt)
+    await Runner.run(*agent, prompt)
 
 
 # --- Main runner ---

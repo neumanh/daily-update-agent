@@ -1,5 +1,6 @@
 # Agent files
 .cache.sqlite
+family_topics.json
 
 # IDE files
 .vscode/
