@@ -71,7 +71,8 @@ async def run_hadas_agent(agent: Agent):
         "2. If tomorrow's weather is rainy or significantly different, include weather info.\n"
         "3. If the stock market changed significantly, include financial info.\n"
         "4. Use tools for all real data.\n"
-        "5. Optionally include a Dvar Torah or empowering message if it adds value."
+        "5. Include interesting, educational, or surprising content.\n"
+        "6. Optionally include a Dvar Torah or empowering message if it adds value."
     )
 
     await Runner.run(agent, prompt)
@@ -94,7 +95,7 @@ async def run_family_agent(agent: Agent):
         "  * Israel: animals and history of weapons\n"
         "  * Michael: high level architecture, history, archaeology\n"
         "  * Yehonatan: history, geography of Israel\n"
-        "- Include something interesting or educational.\n"
+        "- Include something suprising, interesting or educational.\n"
         "- You may include a joke, Dvar Torah, or empowering message.\n"
         "- Do not return text directly.\n"
         "- Use tools when needed.\n"

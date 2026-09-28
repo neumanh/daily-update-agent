@@ -1,6 +1,9 @@
 # Agent files
 .cache.sqlite
 
+# IDE files
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

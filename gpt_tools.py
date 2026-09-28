@@ -13,7 +13,7 @@ load_dotenv()
 
 
 # --- Constants ---
-MODEL_NAME = "gpt-5-mini"
+MODEL_NAME = "gpt-5.6-luna"
 SEFARIA_URL = "https://www.sefaria.org/api/calendars"
 ALIYAH_NAMES = {
     "1": "Rishon",   "2": "Sheni",   "3": "Shlishi",

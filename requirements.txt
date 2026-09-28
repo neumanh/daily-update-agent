@@ -8,3 +8,4 @@ requests
 openai
 numpy
 yfinance
+openai-agents
